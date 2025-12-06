@@ -49,7 +49,7 @@ data ingestion → cleaning → modeling → evaluation → communication.
 
 ---
 
-## 🧠 Machine Learning Model
+## Machine Learning Model
 
 The app implements a **Logistic Regression** model trained with:
 
@@ -70,21 +70,21 @@ The model predicts the probability that a person has **Low Happiness (≤ 5)**.
 
 The application includes:
 
-### ✔ About Page
+### About Page
 - Description of dataset  
 - Overview of methodology  
 - Explanation of the logistic regression model  
 
-### ✔ Model Summary
+### Model Summary
 - Full regression output  
 - Coefficients, significance, and diagnostics  
 
-### ✔ Performance Tab
+### Performance Tab
 - Adjustable classification threshold  
 - Confusion matrix  
 - Accuracy, sensitivity, specificity  
 
-### ✔ Predict New Case
+### Predict New Case
 - User enters characteristics  
 - App predicts probability of low happiness  
 
@@ -100,7 +100,7 @@ your-repo/
 └── additional_docs/      
 ---
 
-## ▶️ Running the App Locally
+## Running the App Locally
 
 ### **1. Clone the repository**
 ```bash
