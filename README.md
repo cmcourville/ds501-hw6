@@ -1,7 +1,7 @@
 # Mental Health & Social Media — Logistic Regression Shiny App
 
 This repository contains an interactive **R Shiny application** that analyzes the relationship between social media habits and mental well-being using logistic regression. The project is part of **DS501 – Case Study 3**, focusing on the data science lifecycle, machine learning modeling, and building an interactive web application.
-
+The fully deployed Shiny app is available here: https://cmcourville.shinyapps.io/ds501-hw6/
 ---
 
 ## Dataset
@@ -91,7 +91,7 @@ The application includes:
 ---
 
 ## Repository Structure
-your-repo/
+ds501-hw6/
 ├── app.R
 ├── README.md
 ├── data/
@@ -107,10 +107,12 @@ your-repo/
 git clone https://github.com/cmcourville/ds501-hw6.git
 cd ds501-hw6
 ```
+
 ### **2. Open RStudio and install required packages
 ```bash
 install.packages(c("shiny", "dplyr"))
 ```
+
 ### **3. Run the app
 ```bash
 shiny::runApp()
