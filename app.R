@@ -3,7 +3,7 @@ library(dplyr)
 
 # ========== GLOBAL: load data and fit model once ==========
 
-path <- "data/mental health social media balance dataset.csv"
+path <- "data/Mental Health Social Media Balance Dataset.csv"
 
 if (!file.exists(path)) {
   stop("Data file not found: ", path,
@@ -86,8 +86,48 @@ ui <- fluidPage(
         tabPanel(
           "About",
           h3("Project Description"),
-          p("This Shiny app uses the 'Mental Health Social Media Balance' dataset."),
-          p("We create a binary outcome Low_Happiness (Happiness_Index ≤ 5), and fit a logistic regression model using age, gender, daily screen time, sleep quality, stress level, days without social media, exercise frequency, and primary social media platform as predictors.")
+          p("This Shiny application explores how social media habits, lifestyle behaviors, and demographic factors relate to mental well-being using the ",
+            strong("Mental Health Social Media Balance Dataset"), "."),
+          
+          p("The dataset includes variables such as age, gender, daily screen time, sleep quality, stress level, 
+    days spent without social media, exercise frequency, social media platform used, and a self-reported 
+    happiness index ranging from 1 to 10."),
+          
+          h4("Target Variable: Low Happiness"),
+          p("For modeling purposes, the Happiness Index is converted into a binary outcome called ",
+            strong("Low_Happiness"), ":"),
+          tags$ul(
+            tags$li("Low_Happiness = 1 when Happiness_Index ≤ 5 (indicating lower well-being)"),
+            tags$li("Low_Happiness = 0 when Happiness_Index > 5 (indicating moderate or higher well-being)")
+          ),
+          
+          h4("Machine Learning Model: Logistic Regression"),
+          p("This app uses a logistic regression model to estimate the probability that a person belongs 
+     to the Low_Happiness group based on their lifestyle and social media usage patterns."),
+          
+          p("Logistic regression models the probability of an outcome using the function:"),
+          tags$pre("P(Y = 1 | X) = 1 / (1 + exp(-(β0 + β1X1 + ... + βkXk)))"),
+          
+          p("In this context, the predictors include variables such as age, gender, daily screen time, 
+     sleep quality, stress level, days without social media, exercise frequency, and social media platform."),
+          
+          p("Each coefficient represents how strongly a predictor influences the odds of having low happiness, 
+     holding other variables constant."),
+          
+          h4("How to Use This App"),
+          tags$ul(
+            tags$li(strong("Adjust the classification threshold"), " to control how sensitive the model is to low happiness."),
+            tags$li(strong("Review the Model Summary tab"), " to examine coefficient estimates and significance levels."),
+            tags$li(strong("Explore the Performance tab"), 
+                    " to see the confusion matrix and accuracy, sensitivity, and specificity metrics."),
+            tags$li(strong("Use the Predict New Case tab"), 
+                    " to input custom user characteristics and generate a predicted probability of low happiness.")
+          ),
+          
+          h4("Purpose of the Project"),
+          p("This Shiny application demonstrates the full data science lifecycle: loading data, cleaning and transforming it, 
+     selecting an appropriate machine learning algorithm, training and evaluating a model, and communicating insights 
+     interactively. It serves as the final deliverable for Case Study 3 in DS501.")
         ),
         tabPanel("Model Summary", verbatimTextOutput("model_summary")),
         tabPanel(
