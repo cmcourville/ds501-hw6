@@ -99,14 +99,6 @@ Logistic regression was selected based on the fact that the response variable is
 
 The predictors included in the model were age, gender, daily screen time, sleep quality, stress level, days without social media, exercise frequency, and social media platform. These predictors were chosen because they represent common lifestyle factors that plausibly influence well-being.
 
-```{r fit-model}
-logit_formula <- Low_Happiness ~ Age + Gender + Daily_Screen_Time_hrs +
-  Sleep_Quality + Stress_Level + Days_Without_Social_Media +
-  Exercise_Frequency + Social_Media_Platform
-
-logit_model <- glm(logit_formula, data = df, family = binomial())
-summary(logit_model)
-```
 
 ## Mathematical Background
 
@@ -136,6 +128,10 @@ logit_formula <- Low_Happiness ~ Age + Gender + Daily_Screen_Time_hrs +
 logit_model <- glm(logit_formula, data = df, family = binomial())
 summary(logit_model)
 ```
+
+## Why the Math of Logistic Regression Fits This Dataset
+Logistic regression is mathematically justifiable for this particular dataset due to the fact that the response variable is binary (Low_Happiness) and the use of the logistic function guarantees that the predicted values would be between 0 and 1. Additionally, the log-odds form helps to describe the contribution of each predictor to the probability for having low happiness additively. This turns out to be highly beneficial given the fact that several features within this particular dataset (such as stress levels, sleep quality, and overall screen time per day) relate linearly to happiness indicators. Another reason for choosing this particular model is the fact that this model does not impose a normality constraint on predictors and is flexible enough (by design) to naturally incorporate categorical features via indicator (dummy variable) representation.
+
 
 # Model Evaluation
 
