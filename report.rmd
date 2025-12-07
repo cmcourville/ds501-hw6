@@ -1,0 +1,229 @@
+---
+title: 'DS501 – Case Study 3: Mental Health & Social Media Balance'
+author: "Corrin Courville"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    toc: false
+    toc_depth: '3'
+  html_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+---
+    
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE
+)
+
+library(dplyr)
+library(ggplot2)
+```
+
+# Introduction
+
+In this current report, the linkage between the state of mental well-being and social media usage is examined through the *Mental Health Social Media Balance* Dataset on Kaggle. The overall intention here is to explain the linkage between habit-driven activities such as screen time, sleep quality, stress levels, exercise levels, and social media platform preferences and happiness levels. The overall methodology here involves data preprocessing, creating a binary outcome variable, building a logistic regression model, model evaluation, visualization, and the creation of an interactive Shiny application. The application allows one to explore model-based outputs and make new predictions.
+
+# Dataset Description
+
+The Mental Health Social Media Balance Dataset is the dataset used for this research. The Mental Health Social Media Balance Dataset is composed of self-reported behavior and lifestyle factors for social media participants. The various factors used here include age, gender, amount of time spent on screens each day, Sleep Quality (rate from 1-10), Stress Level (rate from 1-10), exercise undertaken each week, number of days without social media access, favorite social media platform, and Happiness Index (rate from 1-10).
+
+The data was imported from the project's data directory. This is the structure and content that defines the data.
+
+```{r load-data}
+
+data_path <- "data/Mental Health Social Media Balance Dataset.csv"
+raw_df <- read.csv(data_path, stringsAsFactors = FALSE)
+str(raw_df)
+```
+
+# Motivation
+
+The rise of social media has raised concerns about the effect that online behavior can have on mental health. In recognition of the amount of time spent online and known correlations between sleep, physical activity, stress, and happiness, this research uses statistical analysis and interactive visualization to help shed light on this issue. In creating a model and implementing a Shiny application associated with the model, this research offers a means for examining happiness indicators that correspond with lifestyle decisions.
+
+The fully deployed Shiny app is available here:
+https://cmcourville.shinyapps.io/ds501-hw6/
+
+The tool provides the ability to analyze model output, evaluate prediction metrics, and perform a new case simulation. It represents the full process of doing data science from preparation to deployment.
+
+# Data Preparation
+
+Before building the model, some preprocessing was done. The column names with dots and specials were handled for standardization. Categorical columns such as gender and platforms were transformed to factors. A significant transformation was carried out for creating a target variable with a range of values as Low_Happiness = Happiness_Index <=5. It can be observed that a simple classifier can be used on this target due to its binary nature.
+
+```{r clean}
+df <- raw_df
+df <- rename(
+  df,
+  Daily_Screen_Time_hrs = Daily_Screen_Time.hrs.,
+  Sleep_Quality         = Sleep_Quality.1.10.,
+  Stress_Level          = Stress_Level.1.10.,
+  Exercise_Frequency    = Exercise_Frequency.week.,
+  Happiness_Index       = Happiness_Index.1.10.
+)
+df <- mutate(
+  df,
+  Gender                = factor(Gender),
+  Social_Media_Platform = factor(Social_Media_Platform)
+)
+```
+The `Low_Happiness` variable was constructed as follows.
+
+```{r target}
+df <- df %>%
+  mutate(
+    Low_Happiness = ifelse(Happiness_Index <= 5, 1, 0)
+  ) %>%
+  select(
+    Low_Happiness,
+    Age,
+    Gender,
+    Daily_Screen_Time_hrs,
+    Sleep_Quality,
+    Stress_Level,
+    Days_Without_Social_Media,
+    Exercise_Frequency,
+    Social_Media_Platform,
+    Happiness_Index
+  ) %>%
+  na.omit()
+
+summary(df$Low_Happiness)
+```
+
+# Machine Learning Methodology
+
+Logistic regression was selected based on the fact that the response variable is binary. In this case, the response variable is `Low_Happiness`. Logistic regression predicts the probability that a subject is from the response category given the other predictor variables. The resulting model is interpretable and provides information on the contribution made by each predictor variable to determine the subjects with low happiness. It is made up of a linear predictor and the logistics function.
+
+The predictors included in the model were age, gender, daily screen time, sleep quality, stress level, days without social media, exercise frequency, and social media platform. These predictors were chosen because they represent common lifestyle factors that plausibly influence well-being.
+
+```{r fit-model}
+logit_formula <- Low_Happiness ~ Age + Gender + Daily_Screen_Time_hrs +
+  Sleep_Quality + Stress_Level + Days_Without_Social_Media +
+  Exercise_Frequency + Social_Media_Platform
+
+logit_model <- glm(logit_formula, data = df, family = binomial())
+summary(logit_model)
+```
+
+## Mathematical Background
+
+The logistic regression model estimates the probability that an observation belongs to the positive class (here, `Low_Happiness = 1`) using the logistic function:
+
+$$
+P(Y = 1 \mid X) = \frac{1}{1 + e^{-(\beta_0 + \beta_1X_1 + \cdots + \beta_kX_k)}}
+$$
+
+The expression inside the exponential term,
+
+$$
+\eta = \beta_0 + \beta_1X_1 + \cdots + \beta_kX_k
+$$
+
+is called the **linear predictor**. Logistic regression maps this linear predictor into a probability between zero and one. Each predictor coefficient $\beta_j$ describes how that variable influences the log-odds of low happiness, and exponentiating the coefficient gives an **odds ratio**:
+
+$$
+\text{Odds Ratio} = e^{\beta_j}
+$$
+
+```{r}
+logit_formula <- Low_Happiness ~ Age + Gender + Daily_Screen_Time_hrs +
+  Sleep_Quality + Stress_Level + Days_Without_Social_Media +
+  Exercise_Frequency + Social_Media_Platform
+
+logit_model <- glm(logit_formula, data = df, family = binomial())
+summary(logit_model)
+```
+
+# Model Evaluation
+
+Predicted probabilities were created and discretized at a threshold of 0.5 for classification as Low_Happiness and otherwise. A confusion matrix was calculated for evaluating the classification accuracy, with parameters such as accuracy, sensitivity, and specificity.
+
+```{r confusion}
+probs <- predict(logit_model, type = "response")
+pred <- ifelse(probs >= 0.5, 1, 0)
+cm <- table(Predicted = pred, Actual = df$Low_Happiness)
+cm
+```
+
+Accuracy, sensitivity, and specificity were calculated to summarize how well the model distinguishes low-happiness cases.
+
+```{r metrics}
+tp <- cm["1", "1"]
+tn <- cm["0", "0"]
+fp <- cm["1", "0"]
+fn <- cm["0", "1"]
+
+accuracy    <- (tp + tn) / sum(cm)
+sensitivity <- tp / (tp + fn)
+specificity <- tn / (tn + fp)
+
+data.frame(
+  Metric = c("Accuracy", "Sensitivity", "Specificity"),
+  Value  = round(c(accuracy, sensitivity, specificity), 3)
+)
+```
+
+# Visualizations
+
+A series of graphics was created to help explain correlations between predictor variables and happiness similar to that enabled by the Shiny application.
+
+## Happiness vs Daily Screen Time
+
+```{r plot-screen}
+ggplot(df, aes(x = Daily_Screen_Time_hrs, y = Happiness_Index,
+               color = factor(Low_Happiness))) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "loess", se = FALSE) +
+  theme_minimal() +
+  labs(
+    title = "Happiness vs Daily Screen Time",
+    x = "Daily Screen Time (hours)",
+    y = "Happiness Index"
+  )
+```
+
+## Happiness vs Stress Level
+
+```{r plot-stress}
+ggplot(df, aes(x = Stress_Level, y = Happiness_Index,
+               color = factor(Low_Happiness))) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "loess", se = FALSE) +
+  theme_minimal() +
+  labs(
+    title = "Happiness vs Stress Level",
+    x = "Stress Level (1–10)",
+    y = "Happiness Index"
+  )
+```
+
+## Happiness vs Sleep Quality
+
+```{r plot-sleep}
+ggplot(df, aes(x = Sleep_Quality, y = Happiness_Index,
+               color = factor(Low_Happiness))) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "loess", se = FALSE) +
+  theme_minimal() +
+  labs(
+    title = "Happiness vs Sleep Quality",
+    x = "Sleep Quality (1–10)",
+    y = "Happiness Index"
+  )
+```
+
+# Findings
+
+The overall outcome from the logistic regression and visualization analysis suggests several important associations. Stress Level is found to be the greatest predictor for Low_Happiness, and higher levels of this variable do increase the predictiveness for Low_Happiness. Sleep Quality is found to be remarkably negatively associated with Low_Happiness, which suggests that greater sleep is associated with greater happiness. Exercise Frequency is found to be negatively associated with Low_Happiness and thus supports the known relationship between exercise and happiness. Daily Screen Time is found to be less associated with Low_Happiness, and higher screen time is close to being associated with lower happiness. The classifier performs well on discrimination tasks, as is apparent from the rate of accuracy, specificity, and sensitivity measurements, and this provides evidence on the applicability of the model to this particular dataset. The Shiny application tool allows for interactive analysis and visualization of these results and various parameters.
+
+# Conclusion
+
+This project is exemplary of the complete end-to-end process for data science analysis and specifically the application developed and deployed for interactive visualization and analysis with the Shiny application. The analysis that is carried out identifies the significant impact that stress levels, sleep quality, and exercise activities and behaviors have on overall mental well-being and highlights correlations between various online behaviors and happiness levels. The Shiny application is important for offering interactive exploration and analysis between the various significant factors and the impact on `Low_Happiness`.
+
+# References
+
+Kaggle Dataset: https://www.kaggle.com/datasets/suchintan/mental-health-social-media-balance-dataset  
+R Packages Used: dplyr, ggplot2, shiny, stats  
